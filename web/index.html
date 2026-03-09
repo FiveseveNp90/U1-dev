@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEFECT Editor</title>
+  <link rel="stylesheet" type="text/css" href="s.css" />
+  <link rel="icon" href="d.svg">
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body onload="su()">
+  <div id="a">
+    <div id="cstart">
+
+      <div id="hh">
+        <div id="hhtop">
+          Connection:
+          <div><input type="radio" id="sw1" name="switch" value="0" checked onclick="toggle(0)">
+            <label for="sw1">Default<br /><span>Direct USB</span></label>
+          </div>
+          <div><input type="radio" id="sw2" name="switch" value="1" onclick="toggle(1)">
+            <label for="sw2">Custom<br /><span>Specify interface</span></label>
+          </div>
+        </div>
+
+        <div id="stopt" style="height: 0;">
+          <div>
+            Input
+            <select id="inList" oninput="setInDevice()">
+            </select>
+          </div>
+          <div>
+            Output
+            <select id="outList" oninput="setOutDevice()">
+            </select>
+          </div>
+          <div id="hhright">
+            <button onclick="reqData()">&circlearrowright; refresh</button>
+          </div>
+        </div>
+      </div>
+      <div id="h">
+        <p id="status">Waiting</p>
+      </div>
+    </div>
+
+  </div>
+  <script src="webmidi.iife.min.js"></script>
+  <script src="start.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(function (registration) {
+          console.log('Service Worker registered with scope:', registration.scope);
+        }).catch(function (error) {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  </script>
+</body>
+
+</html>

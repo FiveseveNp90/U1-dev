@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DEFECT U(1)</title>
+  <link rel="stylesheet" type="text/css" href="s.css" />
+  <link rel="icon" href="d.svg">
+  <link rel="manifest" href="manifest.json">
+</head>
+
+<body onload="su()">
+  <div id="a">
+    <div id="c">
+
+      <div id="herr">
+        errors
+      </div>
+
+      <div id="h">
+        <img src="d.svg" class="fl" />
+        <ul id="psetb">
+          <li>01</li>
+          <li>02</li>
+          <li>03</li>
+          <li>04</li>
+          <li>05</li>
+        </ul>
+        <div id="hdbtn">
+          <button onclick="butt(0)">+</button>
+          <button onclick="butt(2)">+5</button>
+          <button id="hr" onclick='sendCC(35, 120)'>SAVE</button><br />
+          <button onclick="butt(1)">-</button>
+          <button onclick="butt(3)">-5</button>
+          <button id="cp" onclick="cp()">COPY</button>
+        </div>
+      </div>
+
+      <div id="cc">
+
+        <div class="dc" id="dctop">
+          <p class="ex" onclick="too(0)">Configuration <span id="to0">&xutri;</span> </p>
+          <div id="hh0">
+            <br />
+            MIDI channel <input type="number" id="midiCh" min="1" max="16"
+              onInput="this.value = Math.min(Math.max(this.value, 0), 16); sMidiChan(this.value)" />
+
+            <button class="fr" onclick='sendCC(35, 110)'>SAVE config</button>
+            <br />
+            <div id="knobs">
+              <div id="phi0" onclick="phiSel(0)">
+                <img src="k1.png" /><br />
+                Morph 3
+              </div>
+              <div id="phi1" onclick="phiSel(1)">
+                <img src="k2.png" /><br />
+                Select 5
+              </div>
+              <div id="phi2" onclick="phiSel(phiFunc.value)">
+                <img src="k3.png" /><br />
+                <select id="phiFunc" oninput="phiSel(this.value)">
+                  <option value="3">Gain</option>
+                  <option value="4">Low</option>
+                  <option value="5">Mid</option>
+                  <option value="6">High</option>
+                  <option value="7">Clipping</option>
+                </select>
+              </div>
+            </div>
+
+            <p>LED brightness <span class="fr">&nbsp;%</span><span class="fr" id="v34"></span></p>
+            <input type="range" id="s34" class="s" min="10" />
+          </div>
+        </div>
+
+        <div>
+          <p>Gain <span id="v11"></span></p>
+          <input type="range" id="s11" class="s" max="20" />
+
+          <p>Low <span id="v12"></span></p>
+          <input type="range" id="s12" class="s" min="-20" max="0" />
+
+          <p class="n0">Mid <span id="v13"></span></p>
+          <input type="range" id="s13" class="s" min="-14" max="14" step="2" />
+
+          <p class="n0">High <span id="v14"></span></p>
+          <input type="range" id="s14" class="s" min="-14" max="14" step="2" />
+
+          <p>Clipping <span id="v15"></span></p>
+          <input type="range" id="s15" class="s" max="7" />
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+  <script src="webmidi.iife.min.js"></script>
+  <script src="u1.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('service-worker.js')
+        .then(function (registration) {
+          console.log('Service Worker registered with scope:', registration.scope);
+        }).catch(function (error) {
+          console.error('Service Worker registration failed:', error);
+        });
+    }
+  </script>
+</body>
+
+</html>
