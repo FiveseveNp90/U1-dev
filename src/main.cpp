@@ -14,8 +14,8 @@
 #define pC1 2
 #define pC2 3
 #define pC3 4
-#define pC4 5   // bypass
-#define pLED 25 // 6
+#define pC4 5 // bypass
+#define pLED 6
 
 #define pSDA 20
 #define pSCL 21
@@ -28,6 +28,7 @@
 #define autosaveTime 5000
 
 #define presetNum 49 // total presets (0 indexed)
+#define panVal 27
 
 // Global variables
 int currPreset = 1; // 0 to 49
@@ -116,14 +117,11 @@ void setup()
   loadLastPst();
 
   if (digitalRead(pFootsw) == LOW)
-  { //bypass
-    buttonState = true;
+  { // bypass
+    currPreset = 127;
   }
-  else
-  {
-    buttonState = false;
-  }
-  // loadPreset();
+  loadThree();
+  loadPreset();
   autosavePrevMillis = millis();
 }
 
@@ -136,49 +134,51 @@ void loop()
   int ADCread = 0;
   int ADCdiff = 0;
 
-  ADCread = analogRead(pADC) >> 5;
-  ADCdiff = ADCread - adcVal;
-  if (abs(ADCdiff) >= potThreshold)
+  if (currPreset <= presetNum)
   {
-    adcVal = ADCread;
-    switch (config.mode)
+    ADCread = analogRead(pADC) >> 3;
+    ADCdiff = ADCread - adcVal;
+    if (abs(ADCdiff) >= potThreshold)
     {
-    case 0: // morph 3
-      morphPst(ADCread);
-      break;
-    case 1: // sel 5
-      switchPst(ADCread);
-      break;
+      adcVal = ADCread;
+      switch (config.mode)
+      {
+      case 0: // morph 3
+        morphPst(ADCread);
+        break;
+      case 1: // sel 5
+        switchPst(ADCread);
+        break;
 
-    case 3:
-      setGain(ADCread);
-      break;
-    case 4:
-      setLow(ADCread);
-      break;
-    case 5:
-      setMid(ADCread);
-      break;
-    case 6:
-      setHigh(ADCread);
-      break;
-    case 7:
-      setClipping(ADCread);
-      break;
+      case 3:
+        setGain(ADCread);
+        break;
+      case 4:
+        setLow(ADCread);
+        break;
+      case 5:
+        setMid(ADCread);
+        break;
+      case 6:
+        setHigh(ADCread);
+        break;
+      case 7:
+        setClipping(ADCread);
+        break;
 
-    default:
-      morphPst(ADCread);
-      break;
+      default:
+        morphPst(ADCread);
+        break;
+      }
     }
-  }
-
-  unsigned long currentMillis = millis();
-  // save last preset
-  if ((currentMillis - autosavePrevMillis > autosaveTime) && (lastPreset != currPreset) && autosaveFlag)
-  {
-    lastPreset = currPreset;
-    saveLastPst();
-    autosaveFlag = false;
-    autosavePrevMillis = millis();
+    unsigned long currentMillis = millis();
+    // save last preset
+    if ((currentMillis - autosavePrevMillis > autosaveTime) && (lastPreset != currPreset) && autosaveFlag)
+    {
+      lastPreset = currPreset;
+      saveLastPst();
+      autosaveFlag = false;
+      autosavePrevMillis = millis();
+    }
   }
 }

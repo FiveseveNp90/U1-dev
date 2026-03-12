@@ -40,9 +40,6 @@ function onEnabled() {
                 handlePC(e.message.data[1]);
             } else {
                 handleCC(e.message.data[1], e.message.data[2]);
-                if (e.message.data[1] > 100) {
-                    console.log("debug", e.message.data[1], e.message.data[2]);
-                }
             }
         });
     }
@@ -97,7 +94,6 @@ function sendCC(cc, value) {
             break;
         case 35:
             scaledVal = value;
-            console.log("sent", midiChannel, cc, scaledVal);
             break;
         default:
             break;
@@ -161,6 +157,11 @@ function setPreset(pnumber, send) {
     } else {
         first = preset - 4;
     }
+
+    //if (pnumber > psNum) {
+    //        ulist.innerHTML = "bypassed";
+    //}
+
     for (let i in listItems) {
         txt = first + +i;
         if (txt == preset) {

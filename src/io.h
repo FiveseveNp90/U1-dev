@@ -3,7 +3,7 @@
 void setGain(byte val)
 {
     preset.gain = val;
-    int gain = map(val, 0, 128, 16, 64); // 16 = -20 dB?
+    int gain = map(val, 0, 128, 37, 64);
 
     pre.setMaster(gain);
 }
@@ -11,11 +11,21 @@ void setGain(byte val)
 void setLow(byte val)
 {
     preset.low = val;
-    int gain = map(val, 0, 128, 0, 32);
+    int gainR;
+    int gainL;
+    if (val < 64)
+    {
+        gainR = map(val, 0, 64, 0, panVal);
+        gainL = map(val, 0, 64, 31, panVal);
+    }
+    else
+    {
+        gainR = map(val, 64, 128, panVal, 32);
+        gainL = map(val, 64, 127, panVal, 0);
+    }
 
-    pre.setLatten(gain);
-    pre.setRatten(31 - gain);
-    // implement pan law    26 = -6dB
+    pre.setRatten(gainR); // bass
+    pre.setLatten(gainL); // highpassed
 }
 void setMid(byte val)
 {
@@ -36,10 +46,14 @@ void setClipping(byte clip)
 {
     preset.clipping = clip;
 
-    int clipBits = map(clip, 0, 128, 0, 9);
-    digitalWrite(pC1, bitRead(clipBits, 0));
-    digitalWrite(pC2, bitRead(clipBits, 1));
-    digitalWrite(pC3, bitRead(clipBits, 2));
+    byte clipBits = map(clip, 0, 128, 0, 8);
+    bool b1 = bitRead(clipBits, 0);
+    bool b2 = bitRead(clipBits, 1);
+    bool b3 = bitRead(clipBits, 2);
+
+    digitalWrite(pC1, !b1);
+    digitalWrite(pC2, !b2);
+    digitalWrite(pC3, !b3);
 }
 
 void setLED(byte value = config.brightness)
@@ -48,7 +62,7 @@ void setLED(byte value = config.brightness)
 
     if (currPreset <= presetNum)
     {
-        byte scaledVal = map(value, 0, 127, 10, 127);
+        byte scaledVal = map(value, 0, 127, 5, 70);
         analogWrite(pLED, scaledVal);
     }
     else
@@ -60,7 +74,7 @@ void setLED(byte value = config.brightness)
 void blinkLED()
 {
     analogWrite(pLED, 0);
-    delay(50);
+    delay(25);
     analogWrite(pLED, 127);
     delay(50);
     setLED();
@@ -123,68 +137,74 @@ void factoryPst() // initialize presets
         myFile.close();
 
     blinkLED();
-    delay(100);
+    delay(500);
     blinkLED();
-    delay(100);
+    delay(500);
     blinkLED();
-    delay(100);
 }
 
-void loadPreset()
+void loadThree()
+{
+    if (!LittleFS.exists("/0.bin"))
+    {
+        factoryPst();
+    }
+    File myFile = LittleFS.open("/0.bin", "r");
+    myFile.read((byte *)&pstA, sizeof(pstA));
+    myFile.close();
+    myFile = LittleFS.open("/1.bin", "r");
+    myFile.read((byte *)&pstB, sizeof(pstB));
+    myFile.close();
+    myFile = LittleFS.open("/2.bin", "r");
+    myFile.read((byte *)&pstC, sizeof(pstC));
+    myFile.close();
+}
+
+void loadPreset(bool external = false)
 {
     if (currPreset > presetNum)
     {
-        digitalWrite(pC4, LOW); // bypass
+        digitalWrite(pC4, HIGH); // bypass
         pre.setMaster(0);
     }
     else
     {
-        digitalWrite(pC4, HIGH);
+        digitalWrite(pC4, LOW);
 
-        if (config.mode > 0)
-        { // load one preset
-            String fname;
-            fname = "/";
-            fname += String(currPreset);
-            fname += ".bin";
-            if (LittleFS.exists(fname))
-            {
-                File myFile = LittleFS.open(fname, "r");
-                myFile.read((byte *)&preset, sizeof(preset));
-                myFile.close();
-            }
-            else
-            {
-                loadDefaultPst();
-            }
-            setGain(preset.gain);
-            setLow(preset.low);
-            setMid(preset.mid);
-            setHigh(preset.high);
-            setClipping(preset.clipping);
+        // load one preset
+        String fname;
+        fname = "/";
+        fname += String(currPreset);
+        fname += ".bin";
+        if (LittleFS.exists(fname))
+        {
+            File myFile = LittleFS.open(fname, "r");
+            myFile.read((byte *)&preset, sizeof(preset));
+            myFile.close();
         }
         else
-        { // load 3 presets to morph
-            if (!LittleFS.exists("/0.bin"))
-            {
-                factoryPst();
-            }
-            File myFile = LittleFS.open("/0.bin", "r");
-            myFile.read((byte *)&pstA, sizeof(pstA));
-            myFile.close();
-            myFile = LittleFS.open("/1.bin", "r");
-            myFile.read((byte *)&pstB, sizeof(pstB));
-            myFile.close();
-            myFile = LittleFS.open("/2.bin", "r");
-            myFile.read((byte *)&pstC, sizeof(pstC));
-            myFile.close();
+        {
+            loadDefaultPst();
         }
-    }
+        setGain(preset.gain);
+        setLow(preset.low);
+        setMid(preset.mid);
+        setHigh(preset.high);
+        setClipping(preset.clipping);
 
+        if (config.mode == 0)
+        { // load 3 presets to morph
+            loadThree();
+        }
+
+        autosaveFlag = true; // last preset save flag
+        autosavePrevMillis = millis();
+    }
+    if ((config.mode != 1) && !external)
+    {
+        adcVal = 255; // reset ADC read to force update on next loop
+    }
     setLED();
-    // last preset save flag
-    autosaveFlag = true;
-    autosavePrevMillis = millis();
 }
 
 void loadConfig()
@@ -206,28 +226,18 @@ void loadConfig()
 
 void loadLastPst()
 {
-
     if (LittleFS.exists("/last.bin"))
     {
         File myFile = LittleFS.open("/last.bin", "r");
         myFile.read((byte *)&lastPreset, sizeof(lastPreset));
         myFile.close();
-        currPreset = lastPreset;
     }
     else
     {
         lastPreset = 0;
         saveLastPst();
-        currPreset = lastPreset;
     }
-    if (buttonState)
-    {
-        currPreset = 127;
-    }
-    else
-    {
-        currPreset = lastPreset;
-    }
+    currPreset = lastPreset;
 }
 
 void sendData()
@@ -237,7 +247,7 @@ void sendData()
     if (currPreset > presetNum)
     {
         currPreset = lastPreset;
-        loadPreset();
+        loadPreset(true);
     }
 
     MIDI.sendProgramChange(currPreset, midiChan);
@@ -319,36 +329,29 @@ void readFS()
     {
         currentButtonState = false;
     }
+
     if (currentButtonState != lastButtonState)
     {
         lastDebounceTime = millis();
     }
+
     if ((millis() - lastDebounceTime) > debounceThreshold)
     {
         if (currentButtonState != buttonState)
         {
             buttonState = currentButtonState;
             if (buttonState)
-            {
-                analogWrite(pLED, 0);
+            { // bypass
+                currPreset = 127;
             }
             else
             {
-                analogWrite(pLED, 70);
+                currPreset = lastPreset;
             }
+            loadPreset();
         }
     }
     lastButtonState = currentButtonState;
-
-    /*     if (currPreset > presetNum) // if bypassed
-        {
-            currPreset = lastPreset;
-        }
-        else
-        {
-            lastPreset = currPreset;
-            currPreset = 127;
-        } */
 }
 
 // MIDI
@@ -358,7 +361,7 @@ void handlePC(byte channel, byte number)
     if ((channel == midiChan) && (number <= presetNum))
     {
         currPreset = number;
-        loadPreset();
+        loadPreset(true);
     }
 }
 void handleCC(byte channel, byte number, byte value)
@@ -382,6 +385,9 @@ void handleCC(byte channel, byte number, byte value)
             break;
         case 15:
             setClipping(value);
+            break;
+        case 16:
+            morphPst(value);
             break;
         case 34:
             setLED(value);

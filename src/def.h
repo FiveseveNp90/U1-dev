@@ -78,6 +78,7 @@ CC	function        range
 13 	Mid         	-14—14 step 2
 14 	High        	-14—14 step 2
 15 	Clipping        0 — 7
+16	Phi             0 — 127
 34	LED Brightness  10-100
 
 35	reserved:		value
