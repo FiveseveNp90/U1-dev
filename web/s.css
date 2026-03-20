@@ -78,26 +78,24 @@ ol {
     gap: 12px;
 }
 
-li {
+li,
+#h span {
     cursor: pointer;
+    color: #fff;
     opacity: .3;
 }
 
-li:hover {
+#h span {
+    padding: 4px;
+}
+
+li:hover,
+#h span:hover {
     opacity: .5;
 }
 
 li.sel {
     opacity: 1;
-}
-
-#psetb {
-    flex-grow: 1;
-    max-width: 50%;
-    font-family: Consolas, "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", Monaco, "Courier New", Courier, monospace;
-    font-size: 34px;
-    color: #fff;
-    text-align: center;
 }
 
 #h {
@@ -107,22 +105,35 @@ li.sel {
     justify-content: space-between;
     flex-wrap: wrap;
     align-items: center;
+    container-type: size;
+}
+
+#psetb {
+    max-width: 43%;
+    font-size: 32px;
+    color: #fff;
+    text-align: center;
+}
+
+@container (width < 500px) {
+    #psetb {
+        font-size: 28px;
+    }
 }
 
 #hdbtn {
     text-align: right;
-    width: 118px;
     padding-bottom: 1px;
 }
 
 #hdbtn button {
     background: #ffffff33;
-    color: #fff;
     margin: 3px 1px;
 }
 
 #h img {
     filter: brightness(1.6);
+    margin-right: 15px;
 }
 
 #n {
@@ -196,9 +207,12 @@ button:active,
 #stopt,
 #knobs {
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
-    gap: 20px;
+    gap: 10px;
+}
+
+#stopt {
+    flex-wrap: wrap;
 }
 
 #knobs {
@@ -221,6 +235,10 @@ button:active,
     cursor: pointer;
 }
 
+#knobs div img {
+    width: 100%
+}
+
 #stopt div {
     margin-top: 15px;
 }
@@ -229,6 +247,7 @@ button:active,
     font-size: 14px;
     color: #666;
     margin-left: 34px;
+    display: block;
 }
 
 #hhtop button {
@@ -266,7 +285,7 @@ select {
 }
 
 select {
-    min-width: 7em;
+    min-width: 5em;
     max-width: 13em;
 }
 

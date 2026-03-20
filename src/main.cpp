@@ -5,6 +5,7 @@
 #include <MIDI.h>
 #include "def.h"
 #include <LittleFS.h>
+#include <ResponsiveAnalogRead.h>
 
 // Pins
 
@@ -21,7 +22,7 @@
 #define pSCL 21
 
 // Pot read ADC threshold
-#define potThreshold 5
+#define potThreshold 50
 
 // Timings in milliseconds
 #define debounceThreshold 30
@@ -33,11 +34,12 @@
 // Global variables
 int currPreset = 1; // 0 to 49
 byte lastPreset = 1;
-byte adcVal = 255; // out of range to force initial read
 byte midiChan = 1;
 bool autosaveFlag = false;
 bool lastButtonState = false;
 bool buttonState = false;
+bool updatePot = false;
+bool connected = false;
 
 unsigned long lastDebounceTime = 0;
 unsigned long autosavePrevMillis = 0;
@@ -53,6 +55,8 @@ config_type config;
 // filesystem
 lfs_t lfs;
 lfs_file_t file;
+
+ResponsiveAnalogRead analog(pADC, true);
 
 Adafruit_USBD_MIDI usb_midi;
 MIDI_CREATE_INSTANCE(Adafruit_USBD_MIDI, usb_midi, MIDI);
@@ -75,7 +79,7 @@ void setup()
   Wire.setSCL(pSCL);
   Wire.setSDA(pSDA);
   Wire.begin();
-  Wire.setClock(400000); // 100000 / 400000 ?
+  Wire.setClock(400000);
 #if defined(WIRE_HAS_TIMEOUT)
   Wire.setWireTimeout(10000, true);
 #endif
@@ -94,8 +98,7 @@ void setup()
   analogWriteFreq(100000);
   analogWriteResolution(7);
 
-  // hardware init
-  pre.setInput(0, 0, 0);
+  analog.setActivityThreshold(potThreshold);
 
   // read filesystem
 
@@ -128,57 +131,27 @@ void setup()
 void loop()
 {
   MIDI.read();
-
+  analog.update();
   readFS();
 
-  int ADCread = 0;
-  int ADCdiff = 0;
-
-  if (currPreset <= presetNum)
+  if ((currPreset <= presetNum) && analog.hasChanged())
   {
-    ADCread = analogRead(pADC) >> 3;
-    ADCdiff = ADCread - adcVal;
-    if (abs(ADCdiff) >= potThreshold)
-    {
-      adcVal = ADCread;
-      switch (config.mode)
-      {
-      case 0: // morph 3
-        morphPst(ADCread);
-        break;
-      case 1: // sel 5
-        switchPst(ADCread);
-        break;
+    setPot();
 
-      case 3:
-        setGain(ADCread);
-        break;
-      case 4:
-        setLow(ADCread);
-        break;
-      case 5:
-        setMid(ADCread);
-        break;
-      case 6:
-        setHigh(ADCread);
-        break;
-      case 7:
-        setClipping(ADCread);
-        break;
-
-      default:
-        morphPst(ADCread);
-        break;
-      }
-    }
     unsigned long currentMillis = millis();
     // save last preset
-    if ((currentMillis - autosavePrevMillis > autosaveTime) && (lastPreset != currPreset) && autosaveFlag)
+    if ((currentMillis - autosavePrevMillis > autosaveTime) && (lastPreset != currPreset) && (currPreset <= presetNum) && autosaveFlag)
     {
       lastPreset = currPreset;
       saveLastPst();
       autosaveFlag = false;
       autosavePrevMillis = millis();
     }
+  }
+
+  if ((currPreset <= presetNum) && updatePot)
+  {
+    setPot();
+    updatePot = false;
   }
 }

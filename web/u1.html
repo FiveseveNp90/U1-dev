@@ -6,7 +6,6 @@
   <title>DEFECT U(1)</title>
   <link rel="stylesheet" type="text/css" href="s.css" />
   <link rel="icon" href="d.svg">
-  <link rel="manifest" href="manifest.json">
 </head>
 
 <body onload="su()">
@@ -19,6 +18,7 @@
 
       <div id="h">
         <img src="d.svg" class="fl" />
+        <span onclick="butt(3)">&#9664;</span>
         <ul id="psetb">
           <li>01</li>
           <li>02</li>
@@ -26,12 +26,10 @@
           <li>04</li>
           <li>05</li>
         </ul>
+        <span onclick="butt(2)">&#9654;</span>
+        
         <div id="hdbtn">
-          <button onclick="butt(0)">+</button>
-          <button onclick="butt(2)">+5</button>
           <button id="hr" onclick='sendCC(35, 120)'>SAVE</button><br />
-          <button onclick="butt(1)">-</button>
-          <button onclick="butt(3)">-5</button>
           <button id="cp" onclick="cp()">COPY</button>
         </div>
       </div>
@@ -96,16 +94,6 @@
   </div>
   <script src="webmidi.iife.min.js"></script>
   <script src="u1.js"></script>
-  <script>
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('service-worker.js')
-        .then(function (registration) {
-          console.log('Service Worker registered with scope:', registration.scope);
-        }).catch(function (error) {
-          console.error('Service Worker registration failed:', error);
-        });
-    }
-  </script>
 </body>
 
 </html>

@@ -2,11 +2,8 @@ let opt = [false, true];
 let lst = true;
 let v15 = ["Schottky", "Si", "Si asym", "Si+LED", "2Si+LED", "LED", "LED asym", "none"];
 let preset = 42;
+let first = 1;
 let psNum = 50; //total presets
-let lasts = 0;
-let nth = 0;
-let hue = '#444';
-let BA = new Uint8Array(2);
 
 let inDevice = -1;
 let outDevice = -1;
@@ -66,6 +63,7 @@ function su() {
     }
     too(0);
     window.addEventListener('resize', rsh);
+    setTimeout(devListener, 1200);
 }
 
 Number.prototype.map = function (in_min, in_max, out_min, out_max) {
@@ -147,20 +145,16 @@ function handlePC(value) {
     setPreset(value + 1, false);
 }
 
-function setPreset(pnumber, send) {
-    preset = +pnumber;
+function setNav(ext) {
     let listItems = ulist.getElementsByTagName("li");
     let txt;
-    let first = 0;
-    if (preset % 5) {
-        first = (parseInt(preset / 5) * 5) + 1;
-    } else {
-        first = preset - 4;
+    if (ext) {
+        if (preset % 5) {
+            first = (parseInt(preset / 5) * 5) + 1;
+        } else {
+            first = preset - 4;
+        }
     }
-
-    //if (pnumber > psNum) {
-    //        ulist.innerHTML = "bypassed";
-    //}
 
     for (let i in listItems) {
         txt = first + +i;
@@ -178,6 +172,11 @@ function setPreset(pnumber, send) {
         }
         listItems[i].innerText = txt;
     }
+}
+
+function setPreset(pnumber, send) {
+    preset = +pnumber;
+    setNav(true);
     if (send) {
         WebMidi.outputs[outDevice].channels[midiChannel].sendProgramChange(preset - 1);
         console.log("sent PC", (preset - 1));
@@ -250,36 +249,23 @@ function butt(num) {
             }
             break;
         case 2: //+5
-            if (preset <= (psNum - 5)) {
-                preset = preset + 5;
+            if (first <= (psNum - 5)) {
+                first = first + 5;
             } else {
-                if (preset % 5) {
-                    preset = preset % 5;
-                } else {
-                    preset = 5;
-                }
+                first = 1;
             }
             break;
         case 3: //-5
-            if (preset > 5) {
-                preset = preset - 5;
+            if (first > 5) {
+                first = first - 5;
             } else {
-                if (preset % 5) {
-                    let pt = (parseInt(psNum / 5) * 5) + preset;
-                    if (pt > psNum) {
-                        preset = (parseInt(psNum / 5) * 5) - (5 % preset);
-                    } else {
-                        preset = pt;
-                    }
-                } else {
-                    preset = (parseInt(psNum / 5) * 5);
-                }
+                first = psNum - 4;
             }
             break;
         default:
             break;
     }
-    setPreset(preset, true);
+    setNav(false);
 }
 function cp() {
     let cpb = document.getElementById('cp');
@@ -323,4 +309,11 @@ function phiSel(phi) {
     phi = +phi;
     setPhiMode(phi);
     sendCC(35, (phi + 20));
+}
+function devListener() {
+    WebMidi.addListener("portschanged", e => {
+        console.log("Devices changed");
+        setTimeout(reqData, 50);
+        //window.location.reload(); instead?
+    });
 }

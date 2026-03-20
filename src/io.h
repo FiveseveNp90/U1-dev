@@ -3,9 +3,60 @@
 void setGain(byte val)
 {
     preset.gain = val;
-    int gain = map(val, 0, 128, 37, 64);
+    int gain = map(val, 0, 128, 52, 73);
 
-    pre.setMaster(gain);
+    if (gain > 63)
+    {
+        switch (gain)
+        {
+        case 64:
+            pre.setInput(0, 0, 1);
+            pre.setMaster(61);
+            break;
+        case 65:
+            pre.setInput(0, 0, 1);
+            pre.setMaster(62);
+            break;
+        case 66:
+            pre.setInput(0, 0, 1);
+            pre.setMaster(63);
+            break;
+
+        case 67:
+            pre.setInput(0, 0, 2);
+            pre.setMaster(61);
+            break;
+        case 68:
+            pre.setInput(0, 0, 2);
+            pre.setMaster(62);
+            break;
+        case 69:
+            pre.setInput(0, 0, 2);
+            pre.setMaster(63);
+            break;
+
+        case 70:
+            pre.setInput(0, 0, 3);
+            pre.setMaster(61);
+            break;
+        case 71:
+            pre.setInput(0, 0, 3);
+            pre.setMaster(62);
+            break;
+        case 72:
+            pre.setInput(0, 0, 3);
+            pre.setMaster(63);
+            break;
+
+        default:
+            break;
+        }
+    }
+    else
+    {
+        pre.setInput(0, 0, 0);
+        pre.setMaster(gain);
+    }
 }
 
 void setLow(byte val)
@@ -110,12 +161,11 @@ void saveLastPst()
 
 void loadDefaultPst() // edit default values
 {
-    setGain(0);
+    setGain(20);
     setLow(127);
     setMid(63);
     setHigh(63);
     setClipping(127);
-    // savePreset();
 }
 
 void factoryPst() // initialize presets
@@ -135,12 +185,6 @@ void factoryPst() // initialize presets
     myFile = LittleFS.open("/4.bin", "w");
     if (myFile.write((byte *)&factory4, sizeof(factory4)))
         myFile.close();
-
-    blinkLED();
-    delay(500);
-    blinkLED();
-    delay(500);
-    blinkLED();
 }
 
 void loadThree()
@@ -197,12 +241,17 @@ void loadPreset(bool external = false)
             loadThree();
         }
 
+        if (connected)
+        {
+            MIDI.sendProgramChange(currPreset, midiChan);
+        }
+
         autosaveFlag = true; // last preset save flag
         autosavePrevMillis = millis();
     }
     if ((config.mode != 1) && !external)
     {
-        adcVal = 255; // reset ADC read to force update on next loop
+        updatePot = true;
     }
     setLED();
 }
@@ -243,6 +292,7 @@ void loadLastPst()
 void sendData()
 {
     MIDI.sendControlChange(35, 124, midiChan); // 124 ID response
+    connected = true;
 
     if (currPreset > presetNum)
     {
@@ -314,6 +364,40 @@ void switchPst(byte val)
     int selPst = map(val, 0, 128, 0, 5);
     currPreset = selPst;
     loadPreset();
+}
+
+void setPot()
+{
+    int ADCread = analog.getValue() >> 3;
+    switch (config.mode)
+    {
+    case 0: // morph 3
+        morphPst(ADCread);
+        break;
+    case 1: // sel 5
+        switchPst(ADCread);
+        break;
+
+    case 3:
+        setGain(ADCread);
+        break;
+    case 4:
+        setLow(ADCread);
+        break;
+    case 5:
+        setMid(ADCread);
+        break;
+    case 6:
+        setHigh(ADCread);
+        break;
+    case 7:
+        setClipping(ADCread);
+        break;
+
+    default:
+        morphPst(ADCread);
+        break;
+    }
 }
 
 // Footswitch
