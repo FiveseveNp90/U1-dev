@@ -115,6 +115,13 @@ li.sel {
     text-align: center;
 }
 
+#bp {
+    font-size: 32px;
+    color: #656565;
+    text-align: center;
+    display: none;
+}
+
 @container (width < 500px) {
     #psetb {
         font-size: 28px;
@@ -323,7 +330,7 @@ button,
 }
 
 #cp {
-    font-size: 11px;
+    font-size: 10px;
 }
 
 #cp,
@@ -433,8 +440,8 @@ button {
 }
 
 input:disabled {
-    background: #272727;
-    box-shadow: inset 0 0 3px #000, 2px 1px 2px #333;
+    background: #222222;
+    box-shadow: inset 0 0 3px #000, 2px 1px 2px #252525;
     ;
 }
 

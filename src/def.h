@@ -17,39 +17,39 @@ typedef struct
 
 // factory presets
 preset_type factory0 = {
-    .gain = 0,
+    .gain = 31,
     .low = 127,
-    .mid = 63,
-    .high = 63,
-    .clipping = 127,
+    .mid = 72,
+    .high = 99,
+    .clipping = 90,
 };
 preset_type factory1 = {
-    .gain = 30,
-    .low = 127,
-    .mid = 63,
+    .gain = 58,
+    .low = 44,
+    .mid = 99,
     .high = 63,
-    .clipping = 127,
+    .clipping = 90,
 };
 preset_type factory2 = {
-    .gain = 60,
+    .gain = 82,
     .low = 127,
     .mid = 63,
-    .high = 63,
-    .clipping = 127,
+    .high = 0,
+    .clipping = 18,
 };
 preset_type factory3 = {
-    .gain = 90,
+    .gain = 31,
     .low = 127,
-    .mid = 63,
-    .high = 63,
-    .clipping = 127,
+    .mid = 27,
+    .high = 127,
+    .clipping = 36,
 };
 preset_type factory4 = {
-    .gain = 127,
-    .low = 127,
-    .mid = 63,
+    .gain = 107,
+    .low = 88,
+    .mid = 90,
     .high = 63,
-    .clipping = 127,
+    .clipping = 18,
 };
 
 /*
@@ -73,13 +73,13 @@ LED GPIO6
 MIDI mapping
 CC	function        range
 
-11 	Gain            0 — 20
-12	Low
-13 	Mid         	-14—14 step 2
-14 	High        	-14—14 step 2
-15 	Clipping        0 — 7
-16	Phi             0 — 127
-34	LED Brightness  10-100
+11 	Gain              0 — 20
+12	Low				-20 — 0
+13 	Mid         	-14 — 14 step 2
+14 	High        	-14 — 14 step 2
+15 	Clipping          0 — 7
+16	Phi               0 — 127
+34	LED Brightness   10 — 100
 
 35	reserved:		value
 

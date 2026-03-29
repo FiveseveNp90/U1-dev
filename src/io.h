@@ -66,17 +66,17 @@ void setLow(byte val)
     int gainL;
     if (val < 64)
     {
-        gainR = map(val, 0, 64, 0, panVal);
+        gainR = map(val, 0, 64, 17, (panVal - 2));
         gainL = map(val, 0, 64, 31, panVal);
     }
     else
     {
-        gainR = map(val, 64, 128, panVal, 32);
+        gainR = map(val, 64, 128, (panVal - 2), 32);
         gainL = map(val, 64, 127, panVal, 0);
     }
 
     pre.setRatten(gainR); // bass
-    pre.setLatten(gainL); // highpassed
+    pre.setLatten(gainL); // high-passed
 }
 void setMid(byte val)
 {
@@ -241,17 +241,13 @@ void loadPreset(bool external = false)
             loadThree();
         }
 
-        if (connected)
-        {
-            MIDI.sendProgramChange(currPreset, midiChan);
-        }
-
         autosaveFlag = true; // last preset save flag
         autosavePrevMillis = millis();
-    }
-    if ((config.mode != 1) && !external)
-    {
-        updatePot = true;
+
+        if ((config.mode != 1) && !external)
+        {
+            updatePot = true;
+        }
     }
     setLED();
 }
@@ -286,6 +282,11 @@ void loadLastPst()
         lastPreset = 0;
         saveLastPst();
     }
+    if (lastPreset > presetNum)
+    {
+        lastPreset = 0;
+        saveLastPst();
+    }
     currPreset = lastPreset;
 }
 
@@ -296,21 +297,24 @@ void sendData()
 
     if (currPreset > presetNum)
     {
-        currPreset = lastPreset;
-        loadPreset(true);
+        // currPreset = lastPreset;
+        //  loadPreset(true);
+        MIDI.sendProgramChange(currPreset, midiChan);
     }
+    else
+    {
+        MIDI.sendProgramChange(currPreset, midiChan);
 
-    MIDI.sendProgramChange(currPreset, midiChan);
+        MIDI.sendControlChange(35, midiChan, midiChan);
+        MIDI.sendControlChange(34, config.brightness, midiChan);
+        MIDI.sendControlChange(35, (config.mode + 20), midiChan);
 
-    MIDI.sendControlChange(35, midiChan, midiChan);
-    MIDI.sendControlChange(34, config.brightness, midiChan);
-    MIDI.sendControlChange(35, (config.mode + 20), midiChan);
-
-    MIDI.sendControlChange(11, preset.gain, midiChan);
-    MIDI.sendControlChange(12, preset.low, midiChan);
-    MIDI.sendControlChange(13, preset.mid, midiChan);
-    MIDI.sendControlChange(14, preset.high, midiChan);
-    MIDI.sendControlChange(15, preset.clipping, midiChan);
+        MIDI.sendControlChange(11, preset.gain, midiChan);
+        MIDI.sendControlChange(12, preset.low, midiChan);
+        MIDI.sendControlChange(13, preset.mid, midiChan);
+        MIDI.sendControlChange(14, preset.high, midiChan);
+        MIDI.sendControlChange(15, preset.clipping, midiChan);
+    }
 }
 
 void copyPreset()
@@ -364,6 +368,10 @@ void switchPst(byte val)
     int selPst = map(val, 0, 128, 0, 5);
     currPreset = selPst;
     loadPreset();
+    if (connected)
+    {
+        sendData();
+    }
 }
 
 void setPot()
@@ -380,18 +388,38 @@ void setPot()
 
     case 3:
         setGain(ADCread);
+        if (connected)
+        {
+            MIDI.sendControlChange(11, ADCread, midiChan);
+        }
         break;
     case 4:
         setLow(ADCread);
+        if (connected)
+        {
+            MIDI.sendControlChange(12, ADCread, midiChan);
+        }
         break;
     case 5:
         setMid(ADCread);
+        if (connected)
+        {
+            MIDI.sendControlChange(13, ADCread, midiChan);
+        }
         break;
     case 6:
         setHigh(ADCread);
+        if (connected)
+        {
+            MIDI.sendControlChange(14, ADCread, midiChan);
+        }
         break;
     case 7:
         setClipping(ADCread);
+        if (connected)
+        {
+            MIDI.sendControlChange(15, ADCread, midiChan);
+        }
         break;
 
     default:
@@ -432,6 +460,10 @@ void readFS()
             {
                 currPreset = lastPreset;
             }
+            if (connected)
+            {
+                MIDI.sendProgramChange(currPreset, midiChan);
+            }
             loadPreset();
         }
     }
@@ -442,7 +474,7 @@ void readFS()
 
 void handlePC(byte channel, byte number)
 {
-    if ((channel == midiChan) && (number <= presetNum))
+    if (channel == midiChan)
     {
         currPreset = number;
         loadPreset(true);

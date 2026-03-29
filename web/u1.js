@@ -1,7 +1,7 @@
 let opt = [false, true];
 let lst = true;
 let v15 = ["Schottky", "Si", "Si asym", "Si+LED", "2Si+LED", "LED", "LED asym", "none"];
-let preset = 42;
+let preset = 1;
 let first = 1;
 let psNum = 50; //total presets
 
@@ -50,7 +50,7 @@ function reqData() {
 
 function su() {
     let obj;
-    for (let i = 10; i < 36; i++) {
+    for (let i = 10; i < 36; i++) { // 
         if (obj = document.getElementById("s" + i)) {
             obj.addEventListener('input', sB);
         }
@@ -140,9 +140,32 @@ function handleCC(control, value) {
     }
 }
 
+function bypass(bypassed) {
+    let obj;
+    for (let i = 11; i < 16; i++) {
+        if (obj = document.getElementById("s" + i)) {
+            obj.disabled = bypassed;
+        }
+    }
+    obj = document.getElementById("bp");
+    if (bypassed) {
+        obj.style.display = "block";
+        preset = 51;
+    } else {
+        obj.style.display = "none";
+    }
+}
+
 function handlePC(value) {
     value = parseInt(value);
-    setPreset(value + 1, false);
+    if (value > psNum) {
+        bypass(true);
+        setNav(false);
+    } else {
+        bypass(false);
+        setPreset(value + 1, false);
+    }
+    console.log("PC from pedal", value);
 }
 
 function setNav(ext) {
@@ -181,8 +204,6 @@ function setPreset(pnumber, send) {
         WebMidi.outputs[outDevice].channels[midiChannel].sendProgramChange(preset - 1);
         console.log("sent PC", (preset - 1));
         sendCC(35, 123);
-    } else {
-        console.log("PC from pedal", (preset - 1));
     }
 }
 function sB() {

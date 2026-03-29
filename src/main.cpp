@@ -29,7 +29,7 @@
 #define autosaveTime 5000
 
 #define presetNum 49 // total presets (0 indexed)
-#define panVal 27
+#define panVal 26    // 27 6dB
 
 // Global variables
 int currPreset = 1; // 0 to 49
@@ -133,11 +133,19 @@ void loop()
   MIDI.read();
   analog.update();
   readFS();
-
-  if ((currPreset <= presetNum) && analog.hasChanged())
+  if (currPreset <= presetNum)
   {
-    setPot();
 
+    if (analog.hasChanged())
+    {
+      setPot();
+    }
+
+    if (updatePot && !connected)
+    {
+      setPot();
+      updatePot = false;
+    }
     unsigned long currentMillis = millis();
     // save last preset
     if ((currentMillis - autosavePrevMillis > autosaveTime) && (lastPreset != currPreset) && (currPreset <= presetNum) && autosaveFlag)
@@ -147,11 +155,5 @@ void loop()
       autosaveFlag = false;
       autosavePrevMillis = millis();
     }
-  }
-
-  if ((currPreset <= presetNum) && updatePot)
-  {
-    setPot();
-    updatePot = false;
   }
 }
