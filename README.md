@@ -9,6 +9,8 @@ Developed in VSCode/[PlatformIO](https://platformio.org/).
 
 **/web** : web editor
 
+**/hardware** : EasyEDA project file and previews
+
 ## License
 
 [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/deed.en)
