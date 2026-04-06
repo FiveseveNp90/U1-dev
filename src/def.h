@@ -92,5 +92,7 @@ CC	function        range
     paste preset    122
 
     request data    123		respond 124
+							SU(2)	125		SU(3)	126	
+36  firmware no.	127		0 — 127, 8 = 0.8
 
 */

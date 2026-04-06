@@ -293,6 +293,7 @@ void loadLastPst()
 void sendData()
 {
     MIDI.sendControlChange(35, 124, midiChan); // 124 ID response
+    MIDI.sendControlChange(36, Version, midiChan); // 127 version number
     connected = true;
 
     if (currPreset > presetNum)

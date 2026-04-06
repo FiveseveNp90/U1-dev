@@ -520,6 +520,11 @@ input:disabled::-moz-range-thumb {
     float: right;
 }
 
+#fwp {
+    padding: 9px 0 10px 0;
+    color: #666;
+}
+
 @keyframes r {
     from {
         transform: rotate(0deg);

@@ -1,3 +1,8 @@
+//
+
+
+const Version = 0.9;
+
 let opt = 0;
 let hasStorage = false;
 let hasInputs = false;
@@ -103,6 +108,8 @@ function reqData() {
 }
 
 function su() {
+    document.getElementById("firmware").innerHTML = Version;
+
     if (typeof (Storage) !== "undefined") {
         hasStorage = true;
     } else {

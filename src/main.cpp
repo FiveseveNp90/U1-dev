@@ -7,6 +7,10 @@
 #include <LittleFS.h>
 #include <ResponsiveAnalogRead.h>
 
+
+#define Version 9  // 0.9
+
+
 // Pins
 
 #define pFootsw 19

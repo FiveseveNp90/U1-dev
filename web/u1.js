@@ -2,6 +2,7 @@ let opt = [false, true];
 let lst = true;
 let v15 = ["Schottky", "Si", "Si asym", "Si+LED", "2Si+LED", "LED", "LED asym", "none"];
 let preset = 1;
+let firmware = "--"; //firmware version from device
 let first = 1;
 let psNum = 50; //total presets
 
@@ -121,6 +122,12 @@ function handleCC(control, value) {
             case 34:
                 scaledVal = value.map(0, 128, 10, 101);
                 break;
+            case 36:
+                firmware = scaledVal / 10;
+                let fwtext = firmware.toFixed(1);
+                document.getElementById("firmware").innerHTML = fwtext;
+                break;
+
             default:
                 break;
         }
