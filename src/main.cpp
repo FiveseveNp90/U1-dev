@@ -7,9 +7,7 @@
 #include <LittleFS.h>
 #include <ResponsiveAnalogRead.h>
 
-
-#define Version 9  // 0.9
-
+#define Version 10 // 10.0
 
 // Pins
 
@@ -110,6 +108,7 @@ void setup()
 
   MIDI.setHandleProgramChange(handlePC);
   MIDI.setHandleControlChange(handleCC);
+  MIDI.setHandleSystemExclusive(handleSysEx);
   MIDI.begin(MIDI_CHANNEL_OMNI);
   midiChan = config.midiChan;
   MIDI.turnThruOff();
@@ -137,6 +136,12 @@ void loop()
   MIDI.read();
   analog.update();
   readFS();
+
+  if (connected && !TinyUSBDevice.mounted())
+  {
+    connected = false; //remove connected flag if USB is disconnected
+  }
+
   if (currPreset <= presetNum)
   {
 

@@ -85,27 +85,48 @@ function onEnabled() {
     setTimeout(reqData, 500);
 }
 
-function reqData() {
-    let outDevice = 0;
+function getOutDevice() {
+    let idx = 0;
     if (opt == 0) {
-        if (outMatch > -1) {
-            outDevice = outMatch;
-        }
+        if (outMatch > -1) idx = outMatch;
     } else {
-        outDevice = outSel.value;
+        idx = outSel.value;
     }
-    if (WebMidi.outputs.length > 0) {
+    if (idx >= 0 && idx < WebMidi.outputs.length) return WebMidi.outputs[idx];
+    return null;
+}
+
+function getInDevice() {
+    let idx = 0;
+    if (opt == 0) {
+        if (inMatch > -1) idx = inMatch;
+    } else {
+        idx = inSel.value;
+    }
+    if (idx >= 0 && idx < WebMidi.inputs.length) return WebMidi.inputs[idx];
+    return null;
+}
+
+function reqData() {
+    let out = getOutDevice();
+    if (!out) return;
+    try {
         if (midiDdVal == "") {
             for (let index = 1; index <= 16; index++) {
-                WebMidi.outputs[outDevice].channels[index].sendControlChange(35, 123);
+                out.channels[index].sendControlChange(35, 123);
             }
             console.log("req init Data");
         } else {
-            WebMidi.outputs[outDevice].channels[midiChannel].sendControlChange(35, 123);
+            out.channels[midiChannel].sendControlChange(35, 123);
             console.log("req Data on", midiChannel);
         }
+    } catch (e) {
+        errormsg("MIDI send failed");
+        console.error(e);
     }
 }
+
+document.addEventListener('DOMContentLoaded', su);
 
 function su() {
     document.getElementById("firmware").innerHTML = Version;
@@ -161,9 +182,10 @@ function setInDevice() {
     if (hasStorage) {
         localStorage.setItem("inputD", inDevice);
     }
-    if (WebMidi.inputs.length > 0) {
-        WebMidi.inputs[inDevice].removeListener();
-        WebMidi.inputs[inDevice].addListener("midimessage", e => {
+    let input = getInDevice();
+    if (input) {
+        input.removeListener();
+        input.addListener("midimessage", e => {
             if (e.message.channel && (e.message.channel != midiChannel)) {
                 midiChannel = e.message.channel;
                 midiDdVal = midiChannel;
@@ -191,6 +213,9 @@ function setOutDevice() {
     console.log("setOutDevice", outDevice);
     if (hasStorage) {
         localStorage.setItem("outputD", outDevice);
+    }
+    if (!getOutDevice()) {
+        errormsg("No output device");
     }
 }
 function devListener() {

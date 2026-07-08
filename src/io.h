@@ -292,7 +292,7 @@ void loadLastPst()
 
 void sendData()
 {
-    MIDI.sendControlChange(35, 124, midiChan); // 124 ID response
+    MIDI.sendControlChange(35, 124, midiChan);     // 124 ID response
     MIDI.sendControlChange(36, Version, midiChan); // 127 version number
     connected = true;
 
@@ -542,6 +542,30 @@ void handleCC(byte channel, byte number, byte value)
             break;
         default:
             break;
+        }
+    }
+}
+void handleSysEx(byte *array, unsigned size)
+{
+    if (array[1] == 0x57) // vendor ID
+    {
+        if (array[2] == 0x52 && array[3] == 0x45 && array[4] == 0x53 && array[5] == 0x45 && array[6] == 0x54) //factory reset
+        {
+            factoryPst();
+
+            config.midiChan = 1;
+            config.brightness = 20;
+            config.mode = 0;
+            saveConfig();
+            delay(100);
+            blinkLED();
+            delay(100);
+            blinkLED();
+
+            currPreset = 0;
+            loadPreset();
+            
+            sendData();
         }
     }
 }

@@ -4,11 +4,13 @@
 <head>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>DEFECT U(1)</title>
+  <link rel="preload" href="webmidi.iife.min.js" as="script">
+  <link rel="preload" href="th.png" as="image">
   <link rel="stylesheet" type="text/css" href="s.css" />
   <link rel="icon" href="d.svg">
 </head>
 
-<body onload="su()">
+<body>
   <div id="a">
     <div id="c">
 
@@ -39,7 +41,7 @@
         <div class="dc" id="dctop">
           <p class="ex" onclick="too(0)">Configuration <span id="to0">&xutri;</span> </p>
           <div id="hh0">
-            <p id="fwp">Firmware version: <span id="firmware">--</span></p>
+            <p id="fwp">Firmware version: <span id="firmware" title="Factory reset" onclick='fprompt()'>--</span></p>
             MIDI channel <input type="number" id="midiCh" min="1" max="16"
               onInput="this.value = Math.min(Math.max(this.value, 0), 16); sMidiChan(this.value)" />
 
@@ -94,8 +96,8 @@
     </div>
 
   </div>
-  <script src="webmidi.iife.min.js"></script>
-  <script src="u1.js"></script>
+  <script src="webmidi.iife.min.js" defer></script>
+  <script src="u1.js" defer></script>
 </body>
 
 </html>

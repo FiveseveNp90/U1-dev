@@ -8,15 +8,52 @@ let psNum = 50; //total presets
 
 let inDevice = -1;
 let outDevice = -1;
+let hasError = false;
 
 let midiChannel = 16;
 let ulist = document.getElementById("psetb");
 let midiDdVal = document.getElementById("midiCh").value;
+let herr = document.getElementById("herr");
+let sB_last = 0;
+let sB_timer = 0;
+
+function errormsg(msg) {
+    herr.style.display = "block";
+    herr.innerHTML = msg + '<button onclick="reqData()">RETRY</button>';
+    console.error(msg);
+    hasError = true;
+}
+
+function clearerror() {
+    herr.style.display = "none";
+    hasError = false;
+}
+
+function fprompt() {
+    herr.innerHTML = 'Reset config and presets?' + '<button onclick="clearerror()">NO</button> <button onclick="fprompt2()" style="margin-right:15px;">YES</button>';
+    herr.style.display = "block";
+    hasError = true;
+}
+
+function fprompt2() {
+    herr.innerHTML = 'Are you sure?' + '<button onclick="clearerror()">NO</button> <button onclick="freset()" style="margin-right:15px;">YES</button>';
+    herr.style.display = "block";
+    hasError = true;
+}
+
+function freset() {
+    try {
+        WebMidi.outputs[outDevice].sendSysex(0x57, [0x52, 0x45, 0x53, 0x45, 0x54]);
+        clearerror();
+    } catch (e) {
+        errormsg("MIDI SysEx send failed");
+    }
+}
 
 WebMidi
-    .enable()
+    .enable({sysex: true})
     .then(onEnabled)
-    .catch(err => console.log(err));
+    .catch(err => errormsg(err));
 
 function onEnabled() {
 
@@ -25,33 +62,46 @@ function onEnabled() {
     midiChannel = localStorage.getItem("midiCh");
     console.log("inD " + inDevice, "outD " + outDevice, "chan " + midiChannel);
 
-    if (WebMidi.inputs.length > 0) {
-        WebMidi.inputs[inDevice].removeListener();
-        WebMidi.inputs[inDevice].addListener("midimessage", e => {
-            if (e.message.channel && (e.message.channel != midiChannel)) {
-                // midiChannel = e.message.channel;
-                // midiDdVal = midiChannel;
-                console.log("set midiChannel to", midiChannel);
-
-            }
-            if (e.message.data[0] > 191) {
-                handlePC(e.message.data[1]);
-            } else {
-                handleCC(e.message.data[1], e.message.data[2]);
-            }
-        });
+    if (inDevice < 0 || inDevice >= WebMidi.inputs.length) {
+        errormsg("Input device not found");
+        return;
     }
+    if (outDevice < 0 || outDevice >= WebMidi.outputs.length) {
+        errormsg("Output device not found");
+        return;
+    }
+
+    WebMidi.inputs[inDevice].removeListener();
+    WebMidi.inputs[inDevice].addListener("midimessage", e => {
+        if (e.message.channel && (e.message.channel != midiChannel)) {
+            console.log("set midiChannel to", midiChannel);
+        }
+        if (e.message.data[0] > 191) {
+            handlePC(e.message.data[1]);
+        } else {
+            handleCC(e.message.data[1], e.message.data[2]);
+        }
+    });
 
     setTimeout(reqData, 50);
 }
 function reqData() {
-    WebMidi.outputs[outDevice].channels[midiChannel].sendControlChange(35, 123);
-    console.log("req Data on", midiChannel);
+    try {
+        WebMidi.outputs[outDevice].channels[midiChannel].sendControlChange(35, 123);
+        console.log("req Data on", midiChannel);
+        if (hasError) {
+            clearerror();
+        }
+    } catch (e) {
+        errormsg("MIDI device disconnected");
+    }
 }
+
+document.addEventListener('DOMContentLoaded', su);
 
 function su() {
     let obj;
-    for (let i = 10; i < 36; i++) { // 
+    for (let i = 10; i < 36; i++) {
         if (obj = document.getElementById("s" + i)) {
             obj.addEventListener('input', sB);
         }
@@ -97,7 +147,11 @@ function sendCC(cc, value) {
         default:
             break;
     }
-    WebMidi.outputs[outDevice].channels[midiChannel].sendControlChange(cc, scaledVal);
+    try {
+        WebMidi.outputs[outDevice].channels[midiChannel].sendControlChange(cc, scaledVal);
+    } catch (e) {
+        errormsg("MIDI send failed");
+    }
 }
 
 function handleCC(control, value) {
@@ -208,15 +262,28 @@ function setPreset(pnumber, send) {
     preset = +pnumber;
     setNav(true);
     if (send) {
-        WebMidi.outputs[outDevice].channels[midiChannel].sendProgramChange(preset - 1);
-        console.log("sent PC", (preset - 1));
-        sendCC(35, 123);
+        try {
+            WebMidi.outputs[outDevice].channels[midiChannel].sendProgramChange(preset - 1);
+            console.log("sent PC", (preset - 1));
+            sendCC(35, 123);
+        } catch (e) {
+            errormsg("MIDI send failed");
+        }
     }
 }
 function sB() {
-    let id = this.id.slice(1);
-    let v = this.value;
-    setVal(id, v, true);
+    let el = this;
+    clearTimeout(sB_timer);
+    let now = performance.now();
+    if (now - sB_last >= 30) {
+        sB_last = now;
+        setVal(el.id.slice(1), el.value, true);
+    } else {
+        sB_timer = setTimeout(function () {
+            sB_last = performance.now();
+            setVal(el.id.slice(1), el.value, true);
+        }, 30);
+    }
 }
 function setS(id, v) {
     document.getElementById('s' + id.toString()).value = v;

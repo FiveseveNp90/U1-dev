@@ -1,8 +1,4 @@
-// The version of the cache.
-const VERSION = "211124";
-
-const cacheName = `inf-cache-${VERSION}`;
-const contentToCache = [
+const PRECACHE = [
   "./",
   "./index.html",
   "./u1.html",
@@ -12,50 +8,39 @@ const contentToCache = [
   "./bar.svg",
   "./d.svg",
   "./icon.svg",
-  "./hue.png",
   "./th.png",
   "./webmidi.iife.min.js"
 ];
 
-self.addEventListener("install", (e) => {
-  console.log("[Service Worker] Install");
-  e.waitUntil(
-    (async () => {
-      const cache = await caches.open(cacheName);
-      console.log("[Service Worker] Caching content");
-      await cache.addAll(contentToCache);
-    })(),
-  );
-});
+const CACHE_NAME = "defect-v1";
 
-self.addEventListener("fetch", (e) => {
-  e.respondWith(
-    (async () => {
-      const r = await caches.match(e.request);
-      console.log(`[Service Worker] Fetching resource: ${e.request.url}`);
-      if (r) {
-        return r;
-      }
-      const response = await fetch(e.request);
-      const cache = await caches.open(cacheName);
-      console.log(`[Service Worker] Caching new resource: ${e.request.url}`);
-      cache.put(e.request, response.clone());
-      return response;
-    })(),
+self.addEventListener("install", (e) => {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE))
   );
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (e) => {
   e.waitUntil(
-    caches.keys().then((keyList) => {
-      return Promise.all(
-        keyList.map((key) => {
-          if (key === cacheName) {
-            return;
-          }
-          return caches.delete(key);
-        }),
-      );
-    }),
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    )
+  );
+  self.clients.claim();
+});
+
+self.addEventListener("fetch", (e) => {
+  e.respondWith(
+    caches.match(e.request).then((cached) => {
+      const fetchPromise = fetch(e.request).then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+        }
+        return response;
+      }).catch(() => cached);
+      return cached || fetchPromise;
+    })
   );
 });

@@ -195,7 +195,7 @@ button:active,
     color: #fff;
 }
 
-.ex {
+.ex, #firmware {
     cursor: pointer;
 }
 
@@ -269,11 +269,14 @@ button:active,
 
 #herr {
     display: none;
-    padding: 15px 25px;
-    background: #660000;
+    padding: 15px 4%;
+    background: #310000;
     color: #fff;
     border-radius: 14px 14px 0 0;
     box-shadow: inset 0px 1px 6px #000;
+}
+#herr button {
+	float: right;
 }
 
 #hd {
